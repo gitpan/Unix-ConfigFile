@@ -1,6 +1,6 @@
 package Unix::AutomountFile;
 
-# $Id: AutomountFile.pm,v 1.3 1999/06/08 21:27:47 ssnodgra Exp $
+# $Id: AutomountFile.pm,v 1.4 2000/05/02 15:50:36 ssnodgra Exp $
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
@@ -15,7 +15,7 @@ require Exporter;
 @EXPORT = qw(
 	
 );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 # Implementation Notes
 #
@@ -148,7 +148,7 @@ Unix::AutomountFile - Perl interface to automounter files
 
   use Unix::AutomountFile;
 
-  $am = new Unix::AutomountFile, "/etc/auto_home";
+  $am = new Unix::AutomountFile "/etc/auto_home";
   $am->automount("newuser", "fileserver:/export/home/&");
   $am->options("newuser", "-rw,nosuid");
   $am->delete("olduser");

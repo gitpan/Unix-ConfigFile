@@ -1,6 +1,6 @@
 package Unix::GroupFile;
 
-# $Id: GroupFile.pm,v 1.5 1999/06/08 21:27:47 ssnodgra Exp $
+# $Id: GroupFile.pm,v 1.6 2000/05/02 15:59:34 ssnodgra Exp $
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
@@ -15,7 +15,7 @@ require Exporter;
 @EXPORT = qw(
 	
 );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 # Package variables
 my $MAXLINELEN = 511;
@@ -62,7 +62,7 @@ sub group {
     unless (@_) {
 	my $gid = $this->gid($name);
 	return undef unless defined $gid;
-	return ($gid, $this->passwd($name), $this->members($name));
+	return ($this->passwd($name), $gid, $this->members($name));
     }
 
     # Create or modify a group
@@ -201,7 +201,7 @@ sub gid {
     my $oldgid = $this->{gid}{$name};
     # Return OK if you try to set the same GID a group already has
     return $oldgid if defined $oldgid && $newgid == $oldgid;
-    return undef if grep /^$newgid$/, values %{$this->{gid}};
+    return undef if grep { $newgid == $_ } values %{$this->{gid}};
     if (defined $oldgid) {
 	$this->{group}{$newgid} = $this->{group}{$oldgid};
 	delete $this->{group}{$oldgid};
@@ -239,7 +239,7 @@ Unix::GroupFile - Perl interface to /etc/group format files
 
   use Unix::GroupFile;
 
-  $grp = new Unix::GroupFile, "/etc/group";
+  $grp = new Unix::GroupFile "/etc/group";
   $grp->group("bozos", "*", $grp->maxgid + 1, @members);
   $grp->remove_user("coolgrp", "bgates", "badguy");
   $grp->add_user("coolgrp", "joecool", "goodguy");
@@ -259,7 +259,7 @@ trying to create a group line longer than 512 characters.  Typically this is
 done by creating multiple lines of groups with the same GID.  When a new
 GroupFile object is created, all members of groups with the same GID are
 merged into a single group with a name corresponding to the first name found
-in the file for that GID.  When the file is commited, long groups are written
+in the file for that GID.  When the file is committed, long groups are written
 out as multiple lines of no more than 512 characters, with numbers appended to
 the group name for the extra lines.
 

@@ -1,6 +1,6 @@
 package Unix::AliasFile;
 
-# $Id: AliasFile.pm,v 1.4 1999/06/08 21:27:47 ssnodgra Exp $
+# $Id: AliasFile.pm,v 1.5 2000/05/02 15:50:11 ssnodgra Exp $
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
@@ -16,7 +16,7 @@ require Exporter;
 @EXPORT = qw(
 	
 );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 # Implementation Notes
 #
@@ -234,7 +234,7 @@ Unix::AliasFile - Perl interface to /etc/aliases format files
 
   use Unix::AliasFile;
 
-  $al = new Unix::AliasFile, "/etc/aliases";
+  $al = new Unix::AliasFile "/etc/aliases";
   $al->alias("bozos", @members);
   $al->delete("deadlist");
   $al->remove_user("coolmail", "bgates", "badguy");

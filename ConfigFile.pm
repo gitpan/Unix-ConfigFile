@@ -1,6 +1,6 @@
 package Unix::ConfigFile;
 
-# $Id: ConfigFile.pm,v 1.5 1999/06/08 21:27:47 ssnodgra Exp $
+# $Id: ConfigFile.pm,v 1.6 2000/05/02 15:49:19 ssnodgra Exp $
 
 use 5.004;
 use strict;
@@ -19,7 +19,7 @@ require Exporter;
 @EXPORT = qw(
 	
 );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 # Package variables
 my $SALTCHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/.";
@@ -128,7 +128,7 @@ sub locking {
 
     return $this->{locking} unless @_;
     my $lockmethod = shift;
-    return undef unless grep /^$lockmethod$/, qw(flock dotlock);
+    return undef unless grep { $lockmethod eq $_ } qw(flock dotlock none);
     $this->{locking} = $lockmethod;
 }
 
@@ -152,7 +152,7 @@ sub mode {
     my $this = shift;
     return $this->{mode} unless @_;
     my $mode = shift;
-    return undef unless grep /^$mode$/, qw(r r+ w);
+    return undef unless grep { $mode eq $_ } qw(r r+ w);
     $this->{mode} = $mode;
 }
 
@@ -164,6 +164,7 @@ sub mode {
 sub lock {
     my $this = shift;
 
+    return 1 if ($this->locking eq "none");
     return 0 if $this->{locked};
     if ($this->locking eq "flock") {
 	@_ ? flock $this->fh, LOCK_SH : flock $this->fh, LOCK_EX;
@@ -189,6 +190,7 @@ sub unlock {
     # is set, which happens only if a lock is successfully acquired.
     # This also prevents us from unlinking someone else's lock file.
 
+    return 1 if ($this->locking eq "none");
     return 0 unless $this->{locked};
     $this->{locked} = 0;
     if ($this->locking eq "flock") {
@@ -321,7 +323,7 @@ a parameter (besides the regular object parameter).  The read method is called
 after the file is opened.  It is expected to read in the configuration file
 and initialize the subclass-specific data structures associated with the
 object.  The write method is called when an object is committed and is
-expected to write out the new configuation to the supplied filehandle.
+expected to write out the new configuration to the supplied filehandle.
 
 =head1 USER METHODS
 
@@ -330,7 +332,7 @@ expected to write out the new configuation to the supplied filehandle.
 This writes any changes you have made to the object back to disk.  If you do
 not call commit, none of your changes will be reflected in the file you are
 modifying.  Commit may not be called on files opened in read-only mode.  There
-are some optional paramters that may be provided; these are passed in the form
+are some optional parameters that may be provided; these are passed in the form
 of key => value pairs.  The "backup" option allows you to specify a file
 extension that will be used to save a backup of the original file.  The
 "writeopts" option passes module-specific options through to the write method.
@@ -351,14 +353,16 @@ specified FILENAME.  There are several optional parameters that may be
 specified.  Options must be passed as keyed pairs in the form of option =>
 value.  Valid options are "locking", "lockfile", "mode", and "readopts".  The
 locking option determines what style of file locking is used; available styles
-are "dotlock" and "flock".  The default locking style is "dotlock".  The
-lockfile option can be used to specify the lock filename used with dotlocking.
-The default is "FILENAME.lock", where FILENAME is the name of the file being
-opened.  The mode option allows the file open mode to be specified.  The
-default mode is "r+" (read/write), but "r" and "w" are accepted as well.
-Finally, the readopts option allows module-specific options to be passed
-through to the read method.  It will accept any scalar for its value;
-typically this will be a list or hash reference.
+are "dotlock", "flock", and "none".  The default locking style is "dotlock".
+The "none" locking style causes no locking to be done, and all lock and unlock
+requests will return success.  The lockfile option can be used to specify the
+lock filename used with dotlocking.  The default is "FILENAME.lock", where
+FILENAME is the name of the file being opened.  The mode option allows the
+file open mode to be specified.  The default mode is "r+" (read/write), but
+"r" and "w" are accepted as well.  Finally, the readopts option allows
+module-specific options to be passed through to the read method.  It will
+accept any scalar for its value; typically this will be a list or hash
+reference.
 
 =head1 DEVELOPER METHODS
 
@@ -369,12 +373,12 @@ As the name suggests, this method is basically a version of the join function
 that incorporates line wrapping.  The specified list will be joined together,
 with each list element separated by the specified delimiter.  The first line
 of output will be prefixed with the HEAD parameter.  If a line exceeds the
-length paramter, output is wrapped to the next line and the INDENT paramter is
-used to prefix the line.  In addition, the TAIL parameter will be added to the
-end of every line generated except the final one.  There is one case where the
-resulting string can exceed the specified line length - if a single list
+length parameter, output is wrapped to the next line and the INDENT parameter
+is used to prefix the line.  In addition, the TAIL parameter will be added to
+the end of every line generated except the final one.  There is one case where
+the resulting string can exceed the specified line length - if a single list
 element, plus HEAD or INDENT, exceeds that length.  One final feature is that
-if the HEAD or INDENT paramters contain the text '%n', it will be replaced
+if the HEAD or INDENT parameters contain the text '%n', it will be replaced
 with the current line number, beginning at 0.
 
 =head2 sequence( )

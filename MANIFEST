@@ -16,3 +16,4 @@ group.orig
 group.test
 passwd.orig
 passwd.test
+examples/grouper.pl

@@ -1,5 +1,13 @@
 Revision history for Perl extension Unix::ConfigFile.
 
+0.06  Tue May  2 12:08:17 2000
+	- Fixed documentation bugs
+	- Optimized performance of maxuid() and added ignore parameter
+	- Unix::PasswdFile now always writes out root as the first account
+	- Fixed group() method to return parameters in the correct order
+	- Added locking style "none" for no locking
+	- Added example script examples/grouper.pl
+
 0.05  Tue Jun  8 17:23:53 1999
 	- Renamed add/remove in AliasFile/GroupFile to add_user/remove_user
 	- New and commit can now pass options through to read and write

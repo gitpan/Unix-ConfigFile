@@ -1,6 +1,6 @@
 package Unix::PasswdFile;
 
-# $Id: PasswdFile.pm,v 1.4 1999/06/08 21:27:47 ssnodgra Exp $
+# $Id: PasswdFile.pm,v 1.5 2000/05/02 15:58:36 ssnodgra Exp $
 
 use strict;
 use vars qw($VERSION @ISA @EXPORT @EXPORT_OK);
@@ -15,7 +15,7 @@ require Exporter;
 @EXPORT = qw(
 	
 );
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 # Implementation notes
 #
@@ -94,9 +94,16 @@ sub users {
 
 # Returns the maximum UID in use in the file
 sub maxuid {
-    my $this = shift;
-    my @uids = sort { $a <=> $b } map { $this->uid($_) } $this->users;
-    return pop @uids;
+    my ($this, $ignore) = @_;
+    my @uids = sort { $a <=> $b } map { $this->{pwent}{$_}[1] } keys %{$this->{pwent}};
+    return undef unless @uids;
+    my $retval = pop @uids;
+    if (defined $ignore) {
+	while ($retval >= $ignore && @uids) {
+	    $retval = pop @uids;
+	}
+    }
+    return $retval;
 }
 
 
@@ -104,7 +111,12 @@ sub maxuid {
 sub write {
     my ($this, $fh) = @_;
 
+    # Make sure to output root first if it exists
+    if (defined $this->user("root")) {
+	print $fh join(":", "root", $this->user("root")), "\n" or return 0;
+    }
     foreach my $user ($this->users) {
+	next if ($user eq "root");
 	print $fh join(":", $user, $this->user($user)), "\n" or return 0;
     }
     return 1;
@@ -172,7 +184,7 @@ Unix::PasswdFile - Perl interface to /etc/passwd format files
 
   use Unix::PasswdFile;
 
-  $pw = new Unix::PasswdFile, "/etc/passwd";
+  $pw = new Unix::PasswdFile "/etc/passwd";
   $pw->user("joeblow", $pw->encpass("secret"), $pw->maxuid + 1, 10,
 	    "Joe Blow", "/export/home/joeblow", "/bin/ksh");
   $pw->delete("deadguy");
@@ -218,9 +230,12 @@ Read or modify a user's GID.  Returns the GID in either case.
 Read or modify a user's home directory.  Returns the home directory in either
 case.
 
-=head2 maxuid( )
+=head2 maxuid( [IGNORE] )
 
-This method returns the maximum UID in use by all users.
+This method returns the maximum UID in use by all users.  If you pass in the
+optional IGNORE parameter, it will ignore all UIDs greater or equal to IGNORE
+when doing this calculation.  This is useful for excluding accounts like
+nobody.
 
 =head2 new( FILENAME [,OPTIONS] )
 
